@@ -66,12 +66,14 @@ class CustomGroupedConv2D(nn.Module):
 
 
 # the output of CustomGroupedConv2D(x) must be equal to grouped_layer(x)
-custom_layer = CustomGroupedConv2D(64, 128, 3, stride=1, padding=1, groups=16, bias=True)
+groups=16
+out_filter_shape=128
+custom_layer = CustomGroupedConv2D(64, out_filter_shape, 3, stride=1, padding=1, groups=groups, bias=True)
 
 # copy weights and bias from the original layer to the custom layer
 for i, conv in enumerate(custom_layer.conv_stack):
-    conv.weight.data = w_torch[i*(128//16):(i+1)*(128//16), :, :, :]
-    conv.bias.data = b_torch[i*(128//16):(i+1)*(128//16)]
+    conv.weight.data = w_torch[i*(out_filter_shape//groups):(i+1)*(out_filter_shape//groups), :, :, :]
+    conv.bias.data = b_torch[i*(out_filter_shape//groups):(i+1)*(out_filter_shape//groups)]
 
 y_custom = custom_layer(x)
 print("Custom shape",y_custom.shape)
@@ -79,6 +81,8 @@ print("Custom shape",y_custom.shape)
 # check if the outputs are equal
 if (y_custom.shape)==(y.shape):
     print("SHapes are matching!")
+
+print(torch.eq(y, y_custom))
 
 
 
