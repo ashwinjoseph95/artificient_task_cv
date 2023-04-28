@@ -66,18 +66,18 @@ class Model(nn.Module):
 
     def forward(self, x):
         # Pass the input through the layers
-        print(x.shape)
+        # print(x.shape)
         x = self.conv_block1(x)
-        print(x.shape)
+        # print(x.shape)
         x = self.block(x)
         x = self.conv_block2(x)
         x = self.block(x)
-        print(x.shape)
+        # print(x.shape)
         x = self.conv_block3(x)
         x = self.block(x)        
         x = self.conv_block4(x)
         x_branch1 = self.block(x)   
-        print(x_branch1.shape)
+        # print(x_branch1.shape)
 
         x = self.conv_block5(x_branch1)
         x_branch_1_1 = self.block(x)       
@@ -92,26 +92,30 @@ class Model(nn.Module):
         x = self.conv_block5(x_branch1)
         x_branch2 = self.block(x)    
         x = torch.cat((x_branch2,x_branch_1_1,x_branch_1_1_1,x_branch_1_1_1_1),dim=1)
-        print(x_branch2.shape,x_branch_1_1.shape,x_branch_1_1_1.shape,x_branch_1_1_1_1.shape)
-        print(x.shape)
+        # print(x_branch2.shape,x_branch_1_1.shape,x_branch_1_1_1.shape,x_branch_1_1_1_1.shape)
+        # print(x.shape)
         x = self.conv_block6(x)
         x_branch3 = self.block(x)
-        print(x_branch3.shape)
+        # print(x_branch3.shape)
 
 
         x = self.conv_block7(x_branch3)
         x = self.block(x)
         x = self.conv_block8(x)
         x = self.block(x)
-        print(x.shape)
+        # print(x.shape)
 
         m = self.pooling(x_branch3)
         print(m.shape)
         m1 = self.conv_block7(m )
         m1 = self.block(m1)
         x1 = torch.cat((x,m1),dim=1)
-        print(x1.shape,x.shape,m1.shape)
+        # print(x1.shape,x.shape,m1.shape)
 
+        x1 = x1.permute(0,2,3,1)
+        x1 = x1.permute(0,3,1,2)
+        x1=self.sigmoid(x1)
+        print("x1.shape",x1.shape)
         return x1
 
 # Create an instance of the model and print a summary of the layers
