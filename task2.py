@@ -29,8 +29,39 @@ torch.manual_seed(8)
 np.random.seed(8)
 
 img = cv2.imread('data/sample.png')
-
+print(img.shape)
 # write your code here ...
 
 
+transform = T.Compose([
+    T.ToTensor(),
+    
+    T.RandomAffine(degrees=5, translate=(0.1, 0.1), scale=(0.9, 1.1)),
+    T.RandomRotation(degrees=5),
+    T.RandomHorizontalFlip(p=0.5),
+    T.CenterCrop((320, 640)),
+    T.Resize((160, 320)),
+    T.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.4, hue=0.2)
+])
 
+
+transformed_x = transform(img)
+
+transformed_x=np.array(transformed_x).transpose(1, 2, 0)
+
+
+
+path_to_save="data/sample_augmented.png"
+cv2.imwrite(path_to_save,transformed_x)
+
+
+window_name = 'org image'
+cv2.imshow(window_name, img)
+cv2.waitKey(0)
+
+window_name = 'new image'
+cv2.imshow(window_name, transformed_x)
+cv2.waitKey(0)
+  
+
+cv2.destroyAllWindows()
