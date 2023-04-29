@@ -38,6 +38,8 @@ class Model(nn.Module):
 
         # Initialize the layers
         self.conv_block1 = self.conv_block(3, 32)
+        # self.init_conv(self.conv_block1)
+
         self.conv_block2= self.conv_block(32, 64, stride=2)
         self.conv_block3 = self.conv_block(64, 64)
         self.conv_block4 = self.conv_block(64, 128, stride=2)
@@ -49,6 +51,9 @@ class Model(nn.Module):
         self.pooling = nn.MaxPool2d(2, stride=2)
         self.sigmoid=nn.Sigmoid()
         
+    def init_conv(self,layername):
+        nn.init.xavier_uniform_(layername)
+        nn.init.zeros_(layername)
 
     def conv_block(self, in_channels, out_channels,kernel_size=3,stride=1, padding=1):
         block = nn.Sequential(
@@ -56,7 +61,12 @@ class Model(nn.Module):
             nn.BatchNorm2d(out_channels),
             
         )
+        # Xavier initialization of weight tensor
+        nn.init.xavier_uniform_(block[0].weight)
+        # Initialization of bias tensor to zero
+        nn.init.zeros_(block[0].bias)
         return block
+
     
     def block(self,input):
         
@@ -106,7 +116,7 @@ class Model(nn.Module):
         # print(x.shape)
 
         m = self.pooling(x_branch3)
-        print(m.shape)
+        # print(m.shape)
         m1 = self.conv_block7(m )
         m1 = self.block(m1)
         x1 = torch.cat((x,m1),dim=1)
@@ -115,11 +125,15 @@ class Model(nn.Module):
         x1 = x1.permute(0,2,3,1)
         x1 = x1.permute(0,3,1,2)
         x1=self.sigmoid(x1)
-        print("x1.shape",x1.shape)
+        # print("x1.shape",x1.shape)
         return x1
 
-# Create an instance of the model and print a summary of the layers
-model = Model()
-# summary(model, (3, 160, 320),batch_size = -1)
-torchinfo.summary(model, (3, 160, 320), batch_dim = 0, col_names = ("input_size", "output_size", "num_params", "kernel_size", "mult_adds"), verbose = 1)
-torch.save(model, "trial.onnx")
+if __name__=="__main__":
+    # Create an instance of the model. MOdel built by checking parameters of each layer by visualizing using Netron opensource tool
+    model = Model()
+
+    # print a summary of the layers. Output dimensions found to be matching in given onnx model and model built by me:  [1, 256, 20, 40]
+    torchinfo.summary(model, (3, 160, 320), batch_dim = 0, col_names = ("input_size", "output_size", "num_params", "kernel_size", "mult_adds"), verbose = 1)
+    
+    # save network
+    # torch.save(model, "trial.onnx")

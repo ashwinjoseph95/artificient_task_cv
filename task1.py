@@ -28,8 +28,8 @@ x = torch.randn(2, 64, 100, 100)
 grouped_layer = nn.Conv2d(64, 128, 3, stride=1, padding=1, groups=16, bias=True)
 
 # weights and bias
-w_torch = grouped_layer.weight
-b_torch = grouped_layer.bias
+w_torch = grouped_layer.weight #shape torch.Size([128, 4, 3, 3])
+b_torch = grouped_layer.bias   #shape torch.Size([128])
 
 y = grouped_layer(x)
 print("Original shape",y.shape)
@@ -44,8 +44,9 @@ class CustomGroupedConv2D(nn.Module):
         # split the input and output channels into equal groups
         in_groups = in_channels // groups
         out_groups = out_channels // groups
-
-        # create a stack of 1-grouped convolution layers with shared weights and bias
+        print("in_groups,",in_groups)
+        print("out_groups,",out_groups)
+        # stack of 1-grouped convolution layers with shared weights and bias
         self.conv_stack = nn.ModuleList([nn.Conv2d(in_groups, out_groups, kernel_size, stride=stride, 
                                                     padding=padding, dilation=dilation, groups=1, bias=bias) 
                                           for _ in range(groups)])
@@ -67,11 +68,14 @@ class CustomGroupedConv2D(nn.Module):
 
 # the output of CustomGroupedConv2D(x) must be equal to grouped_layer(x)
 groups=16
+in_filter_shape=64
 out_filter_shape=128
-custom_layer = CustomGroupedConv2D(64, out_filter_shape, 3, stride=1, padding=1, groups=groups, bias=True)
+custom_layer = CustomGroupedConv2D(in_filter_shape, out_filter_shape, 3, stride=1, padding=1, groups=groups, bias=True)
+print("custom_layer",custom_layer) #16 conv2d available in module list
 
-# copy weights and bias from the original layer to the custom layer
+# copy weights and bias from the original layer to the custom layer groupwise
 for i, conv in enumerate(custom_layer.conv_stack):
+    # import pdb;pdb.set_trace()
     conv.weight.data = w_torch[i*(out_filter_shape//groups):(i+1)*(out_filter_shape//groups), :, :, :]
     conv.bias.data = b_torch[i*(out_filter_shape//groups):(i+1)*(out_filter_shape//groups)]
 
@@ -80,9 +84,11 @@ print("Custom shape",y_custom.shape)
 
 # check if the outputs are equal
 if (y_custom.shape)==(y.shape):
-    print("SHapes are matching!")
+    print("Shapes are matching!")
 
-print(torch.eq(y, y_custom))
+# print(torch.eq(y, y_custom))
+# bool_Tensor_Same = torch.all(torch.eq(y, y_custom))
+print("Are Tensors same? {}".format(torch.all(torch.eq(y, y_custom))))
 
 
 

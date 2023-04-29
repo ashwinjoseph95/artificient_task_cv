@@ -32,9 +32,9 @@ img = cv2.imread('data/sample.png')
 print(img.shape)
 # write your code here ...
 
-
+#setting augmentation parameters as asked in task
 transform = T.Compose([
-    T.ToTensor(),
+    T.ToTensor(), 
     
     T.RandomAffine(degrees=5, translate=(0.1, 0.1), scale=(0.9, 1.1)),
     T.RandomRotation(degrees=5),
@@ -46,13 +46,14 @@ transform = T.Compose([
 
 
 transformed_x = transform(img)
+transformed_x = transformed_x.numpy() * 255 #as ToTensor seems to convert the pixel values to range between 0 and 1. saving this image resulted in just black image hence multiply by 255
+transformed_x = np.uint8(transformed_x.transpose(1, 2, 0))
 
-transformed_x=np.array(transformed_x).transpose(1, 2, 0)
 
 
 
 path_to_save="data/sample_augmented.png"
-cv2.imwrite(path_to_save,transformed_x)
+
 
 
 window_name = 'org image'
@@ -60,6 +61,7 @@ cv2.imshow(window_name, img)
 cv2.waitKey(0)
 
 window_name = 'new image'
+cv2.imwrite(path_to_save,transformed_x)
 cv2.imshow(window_name, transformed_x)
 cv2.waitKey(0)
   
